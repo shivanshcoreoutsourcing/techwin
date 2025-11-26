@@ -4,5 +4,5 @@ export const dynamic = "force-dynamic";
 
 export default function HomeRedirect() {
   // Permanently redirect /home to /
-  redirect("/", 307);
+  redirect("/");
 }
