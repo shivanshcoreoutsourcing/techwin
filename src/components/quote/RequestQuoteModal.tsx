@@ -1,4 +1,3 @@
-// src/components/quote/RequestQuoteModal.tsx
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
@@ -69,14 +68,24 @@ export default function RequestQuoteModal({ open, onClose }: Props) {
     setSubmitting(true);
     setStatus(null);
     try {
-      const res = await fetch("/api/request-quote", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      if (!res.ok) throw new Error("Network error");
-      setStatus("success");
-      setForm({ name: "", company: "", email: "", productInterest: "", message: "", honeypot: "" });
+        const endpoint = process.env.NEXT_PUBLIC_REQUEST_QUOTE_ENDPOINT;
+        if (endpoint) {
+          const res = await fetch(endpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(form),
+          });
+          if (!res.ok) throw new Error("Network error");
+          setStatus("success");
+          setForm({ name: "", company: "", email: "", productInterest: "", message: "", honeypot: "" });
+        } else {
+          // Fallback: open mail client with prefilled content (best-effort) and treat as success
+          const subject = encodeURIComponent(`Quote request from ${form.name} — ${form.productInterest || 'Product inquiry'}`);
+          const body = encodeURIComponent(`Name: ${form.name}\nCompany: ${form.company}\nEmail: ${form.email}\nProduct Interest: ${form.productInterest}\n\nMessage:\n${form.message}`);
+          window.location.href = `mailto:info@techwin.com?subject=${subject}&body=${body}`;
+          setStatus("success");
+          setForm({ name: "", company: "", email: "", productInterest: "", message: "", honeypot: "" });
+        }
     } catch (err) {
       console.error(err);
       setStatus("error");

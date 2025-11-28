@@ -1,4 +1,3 @@
-// src/app/products/[category]/page.tsx
 import React from "react";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
@@ -39,6 +38,10 @@ const CATEGORY_MAP: Record<string, CategoryData> = {
 };
 
 type Props = { params: Promise<{ category: string }> | { category: string } };
+
+export async function generateStaticParams() {
+  return Object.keys(CATEGORY_MAP).map((category) => ({ category }));
+}
 
 // NOTE: Next may pass `params` as a Promise — unwrap it with await
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

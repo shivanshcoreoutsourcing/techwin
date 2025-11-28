@@ -1,25 +1,34 @@
-// src/app/products/[category]/[product]/page.tsx
 import React from "react";
 import { notFound } from "next/navigation";
+import Image from "next/image";
+import { ArrowRight, Download } from "lucide-react";
 
 import { getAllProductPaths, getProductData, getAllProducts } from "@/lib/products";
-
+import Breadcrumbs from "@/components/products/Breadcrumbs";
 import ProductDetailHero from "@/components/products/ProductDetailHero";
 import ProductGallery from "@/components/products/ProductGallery";
 import ProductSpecs from "@/components/products/ProductSpecs";
 import ProductDescription from "@/components/products/ProductDescription";
 import ProductTabs from "@/components/products/ProductTabs";
-import DownloadAndDatasheet from "@/components/products/DownloadAndDatasheet";
+import ProductComparisonTable from "@/components/products/ProductComparisonTable";
 import RelatedProducts from "@/components/products/RelatedProducts";
 import RequestQuote from "@/components/products/RequestQuote";
-import Breadcrumbs from "@/components/products/Breadcrumbs";
-import ProductComparisonTable from "@/components/products/ProductComparisonTable";
-import { Product } from "@/types/categories";
-import Image from "next/image";
-import { Download, ArrowRight } from "lucide-react";
+
+// For static export, all routes must be prerendered via generateStaticParams
+export const dynamic = "error";
 
 export async function generateStaticParams() {
-  return getAllProductPaths();
+  try {
+    const paths = getAllProductPaths();
+    if (paths && paths.length > 0) {
+      return paths;
+    }
+  } catch (err) {
+    console.error("[generateStaticParams] getAllProductPaths failed:", err);
+  }
+  
+  // Return empty to avoid partial prerendering with "output: export"
+  return [];
 }
 
 export default async function ProductPage({ params }: { params: Promise<{ category: string; product: string }> | { category: string; product: string } }) {
@@ -32,7 +41,7 @@ export default async function ProductPage({ params }: { params: Promise<{ catego
     notFound();
   }
 
-  const p: Product = productData;
+  const p = productData;
 
   const heroProps = {
     title: p.title,
@@ -55,7 +64,7 @@ export default async function ProductPage({ params }: { params: Promise<{ catego
   ];
 
   const specsForTable =
-    p.sections.find((s) => s.type === "specs")?.specGroups?.[0].rows.reduce((acc: Record<string, any>, row: any) => ({ ...acc, [row.name]: row.value }), {}) ?? {};
+    p.sections.find((s: any) => s.type === "specs")?.specGroups?.[0].rows.reduce((acc: Record<string, any>, row: any) => ({ ...acc, [row.name]: row.value }), {}) ?? {};
 
   // Fetch full product catalogue for the "all categories & products" block (small sitemap-like block)
   // getAllProducts will be an exported helper implemented in src/lib/products.ts (see snippet below)

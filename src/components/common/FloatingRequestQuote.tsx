@@ -1,4 +1,3 @@
-// src/components/common/FloatingRequestQuote.tsx
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
@@ -82,26 +81,25 @@ export default function FloatingRequestQuote() {
     setSubmitting(true);
 
     try {
-      // POST to the existing API endpoint (you mentioned /api/request-quote earlier).
-      const res = await fetch("/api/request-quote", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name,
-          company,
-          email,
-          product,
-          message,
-          source: "website-floating-quote",
-        }),
-      });
-
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || "Server error");
-      }
-
-      setSuccess("Thanks — your request has been submitted. We will contact you soon.");
+        const endpoint = process.env.NEXT_PUBLIC_REQUEST_QUOTE_ENDPOINT;
+        if (endpoint) {
+          const res = await fetch(endpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, company, email, product, message, source: "website-floating-quote" }),
+          });
+          if (!res.ok) {
+            const text = await res.text();
+            throw new Error(text || "Server error");
+          }
+          setSuccess("Thanks — your request has been submitted. We will contact you soon.");
+        } else {
+          // Fallback: open mail client
+          const subject = encodeURIComponent(`Quote request from ${name} — ${product || 'Product inquiry'}`);
+          const body = encodeURIComponent(`Name: ${name}\nCompany: ${company}\nEmail: ${email}\nProduct: ${product}\n\nMessage:\n${message}`);
+          window.location.href = `mailto:info@techwin.com?subject=${subject}&body=${body}`;
+          setSuccess("Opening mail client to send your request...");
+        }
       // reset fields lightly
       setName("");
       setCompany("");
